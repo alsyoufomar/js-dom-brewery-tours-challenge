@@ -20,3 +20,6 @@ const breweries = [
     website_url: "http://10barrel.com"
   }
 ];
+
+
+module.exports = breweries
