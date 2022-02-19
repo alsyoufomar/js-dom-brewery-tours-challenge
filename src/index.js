@@ -1,81 +1,87 @@
 const ul = document.querySelector('#breweries-list')
 const form = document.querySelector('#select-state-form')
 const filtersList = document.querySelector(".filters-section")
-let allBre = []
-let searchWord
-let stateWord
+const tourTypes = ['micro', 'regional', 'brewpub']
+const state = {
+  breweries: [],
+  citiesList: [],
+  stateName: '',
+  type: '',
+  city: '',
+  BreName: '',
+  uncheck: '',
+  checkedCities: []
+}
 
-
-
-
-function addPubs (arr) {
+function render (arr) {
   while (ul.hasChildNodes()) {
     ul.removeChild(ul.firstChild)
   }
-  arr.forEach(pub => addPub(pub))
+  arr.forEach(pub => addBre(pub))
 }
 
-
-function api (state, type) {
-  fetch(`https://api.openbrewerydb.org/breweries?by_state=${state}&by_type=` + type)
+function api () {
+  let url = `https://api.openbrewerydb.org/breweries?by_state=${state.stateName}`
+  fetch(url + state.type + state.uncheck)
+    .then(res => res.json())
     .then(res => {
-      console.log(type, state)
-      return res.json()
-    })
-    .then(res => {
-      allBre = []
-      res.forEach(a => allBre.push(a))
-      filterMaker(cities())
-      addPubs(res)
+      state.breweries = []
+      state.breweries = res.filter(x => tourTypes.includes(x.brewery_type) === true)
+      citiesSet()
+      filterMaker(state.citiesList)
+      render(state.breweries)
     })
 }
-
 
 form.addEventListener("submit", (e) => {
   e.preventDefault()
-  stateWord = form['select-state'].value
-  api(form['select-state'].value, 'micro&by_type=regional&by_type=brewpub')
+  state.stateName = form['select-state'].value
+  api()
 })
 
 const filter = document.querySelector("#filter-by-type")
 filter.addEventListener("change", (e) => {
-  api(stateWord, e.target.value)
+  state.type = e.target.value
+  e.target.value !== '' && (state.type = '&by_type=' + e.target.value)
+  api()
 })
 
-/********************* the 1st Extention ************************/
+/************ the 1st Extention ***************/
 
-const header = document.createElement("header")
-header.classList.add(".search-bar")
-const search = document.createElement("form")
-search.setAttribute('id', 'search-breweries-form')
-search.setAttribute('autocomplete', 'off')
-const searchLabel = document.createElement('label')
-searchLabel.setAttribute('for', 'search-breweries')
-const searchTitle = document.createElement('h2')
-searchTitle.innerText = 'Search brewerie:'
-const searchBox = document.createElement('input')
-searchBox.setAttribute('id', 'search-breweries')
-searchBox.setAttribute('type', 'text')
-searchBox.setAttribute('name', 'search-breweries')
+function searchByName () {
+  const header = document.createElement("header")
+  header.classList.add(".search-bar")
+  const search = document.createElement("form")
+  search.setAttribute('id', 'search-breweries-form')
+  search.setAttribute('autocomplete', 'off')
+  const searchLabel = document.createElement('label')
+  searchLabel.setAttribute('for', 'search-breweries')
+  const searchTitle = document.createElement('h2')
+  searchTitle.innerText = 'Search brewerie:'
+  const searchBox = document.createElement('input')
+  searchBox.setAttribute('id', 'search-breweries')
+  searchBox.setAttribute('type', 'text')
+  searchBox.setAttribute('name', 'search-breweries')
 
-searchLabel.append(searchTitle)
-search.append(searchLabel, searchBox)
-header.append(search)
-const article = document.querySelector('.search--bar')
-article.prepend(header)
+  searchLabel.append(searchTitle)
+  search.append(searchLabel, searchBox)
+  header.append(search)
+  const article = document.querySelector('.search--bar')
+  article.prepend(header)
 
-
-search.addEventListener('input', (e) => {
-  e.preventDefault()
-  searchWord = search['search-breweries'].value
-  const arr = allBre.filter(b => checker(b.name) === true)
-  addPubs(arr)
-})
-
-function checker (name) {
-  return name.toLowerCase().includes(searchWord.toLowerCase())
+  search.addEventListener('input', (e) => {
+    e.preventDefault()
+    state.BreName = search['search-breweries'].value
+    const arr = state.breweries.filter(b => checker(b.name) === true)
+    render(arr)
+  })
 }
 
+function checker (name) {
+  return name.toLowerCase().includes(state.BreName.toLowerCase())
+}
+
+searchByName()
 
 /****************** the 2nd Extention *******************/
 
@@ -88,61 +94,62 @@ clearAllBtn.innerText = 'clear all'
 clearAllBtn.classList.add('clear-all-btn')
 clearAllBtn.addEventListener('click', () => {
   switcher = !switcher
-  addPubs(allBre)
+  render(state.breweries)
 })
 cityFilterHeading.append(cityFilterTitle, clearAllBtn)
 
-
 /************** the form template *************/
-const filterForm = document.createElement('from')
-filterForm.setAttribute('id', 'filter-by-city-form')
-filtersList.append(cityFilterHeading, filterForm)
 
-let switcher
+const cityFilter = document.createElement('from')
+cityFilter.setAttribute('id', 'filter-by-city-form')
+filtersList.append(cityFilterHeading, cityFilter)
+
 function filterByCity (city) {
   const input = document.createElement('input')
   input.setAttribute('type', 'checkbox')
   input.setAttribute('name', city.toLowerCase())
   input.setAttribute('value', city.toLowerCase())
   input.addEventListener('change', (event) => {
-    switcher = input.checked
-    if (switcher) {
-      input.checked = switcher
-      const arr = allBre.filter(b => b.city.toLowerCase() === event.target.name)
-      addPubs(arr)
+    const arr = state.breweries.filter(b => b.city.toLowerCase() === event.target.name)
+    console.log('arr = ', arr)
+    if (input.checked) {
+      arr.forEach(b => state.checkedCities.push(b))
+      render(state.checkedCities)
+      console.log('checked cities = ', state.checkedCities)
     }
-    else if (!switcher) {
-      const arr = allBre.filter(b => b.city.toLowerCase() !== event.target.name)
-      addPubs(arr)
-    }
+    // else if (!input.checked) {
+    //   for (let n of state.checkedCities) {
+    //     if (arr.some(c => c.id !== n.id)) {
+    //       state.checkedCities.push(n)
+    //     }
+    //   }
+    //   render(state.checkedCities)
+    // }
   })
 
   const label = document.createElement('label')
   label.setAttribute('for', city.toLowerCase())
   label.innerText = city.toLowerCase()
-
-  filterForm.append(input, label)
+  cityFilter.append(input, label)
 }
 
 function filterMaker (brews) {
-  while (filterForm.hasChildNodes()) {
-    filterForm.removeChild(filterForm.firstChild)
+  while (cityFilter.hasChildNodes()) {
+    cityFilter.removeChild(cityFilter.firstChild)
   }
   brews.forEach(x => filterByCity(x))
 }
 
-let city = new Set()
-function cities () {
-  city.forEach(c => city.delete(c))
-  for (let n of allBre) {
-    city.add(n.city)
-  }
-  return [...city]
+function citiesSet () {
+  let city = new Set()
+  state.breweries.forEach(n => city.add(n.city))
+  state.citiesList = [];
+  [...city].forEach(c => state.citiesList.push(c))
 }
 
+/********************** the big guy **************************/
 
-
-function addPub (info) {
+function addBre (info) {
   const li = document.createElement('li');
   const title = document.createElement('h2');
   title.innerText = info.name
