@@ -40,9 +40,9 @@ body {
 main {
   display: grid;
   grid-template-areas:
-    "sidebar title"
-    "sidebar search-bar"
-    "sidebar article";
+    'sidebar title'
+    'sidebar search-bar'
+    'sidebar article';
   grid-template-columns: 1fr 3fr;
   grid-template-rows: auto auto 1fr;
 }
@@ -157,9 +157,9 @@ article {
 
   display: grid;
   grid-template-areas:
-    "heading heading type"
-    "address phone ."
-    ". . link";
+    'heading heading type'
+    'address phone .'
+    '. . link';
   grid-template-columns: repeat(2, 1fr) minmax(140px, auto);
   grid-template-rows: repeat(3, auto);
 
@@ -227,4 +227,11 @@ article {
   text-align: center;
   text-decoration: none;
   font-weight: bold;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0.5em;
 }

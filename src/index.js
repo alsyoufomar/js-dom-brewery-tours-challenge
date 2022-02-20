@@ -13,11 +13,23 @@ const state = {
   checkedCities: []
 }
 
+let pageNum = 1
+let pageCount
 function render (arr) {
+  pageCount = Math.ceil(arr.length / 10)
+  pageNum--
+  let start = 10 * pageNum
+  let paginated = arr.slice(start, start + 10)
   while (ul.hasChildNodes()) {
     ul.removeChild(ul.firstChild)
   }
-  arr.forEach(pub => addBre(pub))
+  if (arr.length > 10) {
+    paginated.forEach(pub => addBre(pub))
+  }
+  else {
+    arr.forEach(pub => addBre(pub))
+  }
+
 }
 
 function api () {
@@ -92,10 +104,7 @@ cityFilterTitle.innerText = 'Cities'
 const clearAllBtn = document.createElement('button')
 clearAllBtn.innerText = 'clear all'
 clearAllBtn.classList.add('clear-all-btn')
-clearAllBtn.addEventListener('click', () => {
-  switcher = !switcher
-  render(state.breweries)
-})
+
 cityFilterHeading.append(cityFilterTitle, clearAllBtn)
 
 /************** the form template *************/
@@ -109,22 +118,34 @@ function filterByCity (city) {
   input.setAttribute('type', 'checkbox')
   input.setAttribute('name', city.toLowerCase())
   input.setAttribute('value', city.toLowerCase())
+  clearAllBtn.addEventListener('click', () => {
+    input.checked && (input.checked = false)
+    state.checkedCities = []
+    render(state.breweries)
+  })
   input.addEventListener('change', (event) => {
     const arr = state.breweries.filter(b => b.city.toLowerCase() === event.target.name)
+    const array = arr.map(b => b.name)
+    console.log('array is ', array)
     console.log('arr = ', arr)
     if (input.checked) {
       arr.forEach(b => state.checkedCities.push(b))
       render(state.checkedCities)
       console.log('checked cities = ', state.checkedCities)
     }
-    // else if (!input.checked) {
-    //   for (let n of state.checkedCities) {
-    //     if (arr.some(c => c.id !== n.id)) {
-    //       state.checkedCities.push(n)
-    //     }
-    //   }
-    //   render(state.checkedCities)
-    // }
+    else {
+      for (let i = state.checkedCities.length - 1; i >= 0; i--) {
+        if (array.includes(state.checkedCities[i].name)) {
+          state.checkedCities.splice(i, 1)
+        }
+      }
+
+      render(state.checkedCities)
+      if (state.checkedCities.length === 0) {
+        render(state.breweries)
+      }
+      console.log('checked cities = ', state.checkedCities.length)
+    }
   })
 
   const label = document.createElement('label')
@@ -181,4 +202,23 @@ function addBre (info) {
   link.append(a)
   li.append(title, type, address, phone, link);
   ul.append(li)
+}
+
+/************************ The 3rd extention ***********************/
+
+const article = document.querySelector('.search--bar')
+const buttons = document.createElement('div')
+buttons.classList.add('buttons')
+article.append(buttons)
+
+for (let i = 0; i < 2; i++) {
+  const page = document.createElement('button')
+  page.classList.add('page')
+  page.innerText = i + 1
+  buttons.append(page)
+  page.addEventListener('click', (e) => {
+    pageNum = Number(e.target.innerText)
+    console.log(Number(e.target.innerText))
+    render(state.breweries)
+  })
 }
