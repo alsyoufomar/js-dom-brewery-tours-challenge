@@ -200,10 +200,37 @@ function addBre (info) {
   a.setAttribute('href', info.website_url)
   a.setAttribute('target', '_blank');
   link.append(a)
-  li.append(title, type, address, phone, link);
+  const addBtn = document.createElement('button')
+  addBtn.setAttribute('name', info.name)
+  addBtn.innerText = 'Add to visit list'
+  addBtn.addEventListener('click', (e) => {
+    console.log(e.target.name)
+    const update = finder(e.target.name)
+    fetch("http://localhost:3000/visitList", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(update)
+    })
+    const delBtn = document.createElement('button')
+    delBtn.setAttribute('name', info.id)
+    delBtn.innerText = 'Remove from visit list'
+    li.append(delBtn)
+    delBtn.addEventListener('click', (e) => {
+      console.log(e.target.name)
+      li.removeChild(delBtn)
+      fetch("http://localhost:3000/visitList/" + e.target.name, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+    })
+  })
+  li.append(title, type, address, phone, link, addBtn);
   ul.append(li)
 }
 
+function finder (str) {
+  return state.breweries.find(x => x.name === str)
+}
 /************************ The 3rd extention ***********************/
 
 const article = document.querySelector('.search--bar')
