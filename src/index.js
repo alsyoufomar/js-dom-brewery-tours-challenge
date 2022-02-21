@@ -9,7 +9,6 @@ const state = {
   type: '',
   city: '',
   BreName: '',
-  uncheck: '',
   checkedCities: []
 }
 
@@ -17,6 +16,7 @@ let pageNum = 1
 let pageCount
 function render (arr) {
   pageCount = Math.ceil(arr.length / 10)
+  buttonMaker(pageCount)
   pageNum--
   let start = 10 * pageNum
   let paginated = arr.slice(start, start + 10)
@@ -34,7 +34,7 @@ function render (arr) {
 
 function api () {
   let url = `https://api.openbrewerydb.org/breweries?by_state=${state.stateName}`
-  fetch(url + state.type + state.uncheck)
+  fetch(url + state.type)
     .then(res => res.json())
     .then(res => {
       state.breweries = []
@@ -211,14 +211,19 @@ const buttons = document.createElement('div')
 buttons.classList.add('buttons')
 article.append(buttons)
 
-for (let i = 0; i < 2; i++) {
-  const page = document.createElement('button')
-  page.classList.add('page')
-  page.innerText = i + 1
-  buttons.append(page)
-  page.addEventListener('click', (e) => {
-    pageNum = Number(e.target.innerText)
-    console.log(Number(e.target.innerText))
-    render(state.breweries)
-  })
+function buttonMaker (num) {
+  while (buttons.hasChildNodes()) {
+    buttons.removeChild(buttons.firstChild)
+  }
+  for (let i = 0; i < num; i++) {
+    const page = document.createElement('button')
+    page.classList.add('page')
+    page.innerText = i + 1
+    buttons.append(page)
+    page.addEventListener('click', (e) => {
+      pageNum = Number(e.target.innerText)
+      render(state.breweries)
+    })
+  }
 }
+
